@@ -1,6 +1,7 @@
 *
 !.gitignore
 !init.el
+!index.html
 !config.org
 !README.md
 !*/img/

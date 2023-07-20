@@ -1,6 +1,8 @@
 #+TITLE: Bugswriter's Emacs Config
 #+AUTHOR: Suraj Kushwah
 #+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
+#+EXPORT_FILE_NAME: index.html
+#+EXPORT_DIR: /ssh:server:~/www/site/emacs/
 
 * Introduction
 This is an Elisp program that runs every time I start my Emacs editor. Some people also call it an *emacs config*. Why am I writing it under Org mode? /Literate Programming, Bitch/!
