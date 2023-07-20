@@ -9,6 +9,10 @@ This is an Elisp program that runs every time I start my Emacs editor. Some peop
 - *Created*: 26-10-2022
 - *License*: [[./LICENSE][GNU General Public License (GPL)]]
 
+#+CAPTION: XKCD Emacs Comic
+#+NAME: fig:Emacs meme
+[[https://imgs.xkcd.com/comics/real_programmers.png]]
+
 * Installation
 You can use my Emacs config anytime; the installation is pretty simple.
 
@@ -56,12 +60,6 @@ The use-package macro allows you to isolate package configuration in your .emacs
   (package-refresh-contents)
   (package-install 'use-package))
 #+END_SRC
-
-
-
-#+CAPTION: XKCD Emacs Comic
-#+NAME: fig:Emacs meme
-[[https://imgs.xkcd.com/comics/real_programmers.png]]
 
 * Better Appearance
 ** Basic Interface Settings
