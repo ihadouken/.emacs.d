@@ -1,5 +1,5 @@
-#+TITLE: Bugswriter's Emacs Config
-#+AUTHOR: Suraj Kushwah
+#+TITLE: My Emacs Config
+#+AUTHOR: Rahul Sharma, Suraj Kushwah
 #+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
 #+EXPORT_FILE_NAME: index.html
 #+EXPORT_DIR: /ssh:server:~/www/site/emacs/
@@ -138,14 +138,27 @@ The use-package macro allows you to isolate package configuration in your .emacs
 
 ** Theme
 The =ef-themes= package is an Emacs package that provides a collection of visually appealing themes for Emacs. It enhances the visual experience of Emacs by offering different color schemes and styles that can be applied to the editor.
+The =doom-themes= are also great. Sometimes =solarized-themes= are great when taking notes.
 
 #+BEGIN_SRC emacs-lisp
-(use-package ef-themes
-  :if window-system
-  :ensure t
-  :config
-  ;; Enable the theme
-  (load-theme 'ef-winter t))
+  (use-package ef-themes
+    ;; :if window-system
+    :ensure t)
+    ;; :config
+    ;; Enable the theme
+    ;; (load-theme 'ef-cyprus t))
+
+  (use-package doom-themes
+    ;; :if window-system
+    :ensure t
+    :config
+    (load-theme 'doom-badger t)
+    (doom-themes-org-config)
+    (doom-themes-visual-bell-config))
+
+  (use-package solarized-theme
+    :if window-system
+    :ensure t)
 #+END_SRC
 
 ** Font
@@ -153,9 +166,87 @@ I love =JetBrains Mono=. Best for programming. Using it since 2018. Make sure to
 
 #+BEGIN_SRC elisp
 (add-to-list 'default-frame-alist
-             '(font . "JetBrains Mono-14"))
+             '(font . "JetBrains Mono-12"))
 #+END_SRC  
-* Editing Features
+
+** Cursor
+Not very fond of blinking cursors.
+#+BEGIN_SRC elisp
+  (blink-cursor-mode -1)
+#+END_SRC
+
+Even in tty mode.
+#+BEGIN_SRC elisp
+  (setq visible-cursor nil)
+#+END_SRC
+
+But I can't live without modal cursor when using =evil mode=.
+#+BEGIN_SRC elisp
+  (use-package evil-terminal-cursor-changer
+    :hook (tty-setup . evil-terminal-cursor-changer-activate))
+#+END_SRC
+
+* Editing
+** Tabs / Spaces
+- I use a tab width of 4 which is a sane default as well as the python standard.
+  #+BEGIN_SRC elisp
+    ;; (setq-default tab-width 4)
+  #+END_SRC
+
+- Insert spaces equal to =tab-width= like vim's =set expandtab=. Also make it global
+  so that emacs uses spaces instead of tabs.
+  #+BEGIN_SRC elisp
+    ;;(setq-default indent-tabs-mode nil)
+    ;;(kill-local-variable indent-tabs-mode)
+    ;;(add-hook 'python-mode-hook
+    ;;  (lambda () (setq indent-tabs-mode nil)))
+  #+END_SRC
+** Tabs / Spaces
+#+BEGIN_SRC elisp
+  ;; Create a variable for our preferred tab width
+  (setq custom-tab-width 4)
+
+  ;; Two callable functions for enabling/disabling tabs in Emacs
+  (defun disable-tabs () (setq indent-tabs-mode nil))
+  (defun enable-tabs  ()
+    (local-set-key (kbd "TAB") 'tab-to-tab-stop)
+    (setq indent-tabs-mode t)
+    (setq tab-width custom-tab-width))
+
+  ;; Hooks to Enable Tabs
+  (add-hook 'prog-mode-hook #'enable-tabs)
+  ;; Hooks to Disable Tabs
+  (add-hook 'lisp-mode-hook #'disable-tabs)
+  (add-hook 'emacs-lisp-mode-hook #'disable-tabs)
+  (add-hook 'python-mode-hook #'disable-tabs)
+
+  ;; Language-Specific Tweaks
+  (setq-default python-indent-offset custom-tab-width) ;; Python
+  (setq-default js-indent-level custom-tab-width)      ;; Javascript
+
+  ;; Making electric-indent behave sanely
+  (setq-default electric-indent-inhibit t)
+
+  ;; Make the backspace properly erase the tab instead of
+  ;; removing 1 space at a time.
+  (setq backward-delete-char-untabify-method 'hungry)
+
+  ;; (OPTIONAL) Shift width for evil-mode users
+  ;; For the vim-like motions of ">>" and "<<".
+  (setq-default evil-shift-width custom-tab-width)
+
+  ;; WARNING: This will change your life
+  ;; (OPTIONAL) Visualize tabs as a pipe character - "|"
+  ;; This will also show trailing characters as they are useful to spot.
+  (setq whitespace-style '(face tabs tab-mark trailing))
+  (custom-set-faces
+   '(whitespace-tab ((t (:foreground "#636363")))))
+  (setq whitespace-display-mappings
+    ;; try to use '→' instead of pipe.
+    '((tab-mark 9 [124 9] [92 9]))) ; 124 is the ascii ID for '\|'
+  ;; (global-whitespace-mode) ; Enable whitespace mode everywhere
+#+END_SRC
+
 ** Hungry Delete
 - /Reference: https://github.com/nflath/hungry-delete/
 
@@ -195,6 +286,12 @@ The "emacs-dashboard" package elevates your Emacs startup experience by providin
   (mood-line-mode))
 #+END_SRC
 
+Sometimes I like to use the nano-theme modeline.
+#+BEGIN_SRC elisp
+(use-package nano-modeline
+  :ensure t)
+#+END_SRC
+
 ** Command Menu
 After pressing =M-x=, Emacs users see a prompt below; this prompt allows us to run any command within Emacs. This is what I loved about Emacs when I was learning it first. Almost anything, any functionality, any program, everything is a function, and I can access that function by just pressing =M-x=. But memorizing all these commands is hard, also typing it. Emacs does provide tab completion, but it sucks. So we are gonna pull up the Emacs magic and install some packages to make it better.
 
@@ -216,6 +313,7 @@ The Ido package lets you switch between buffers and visit files and directories 
 *** Smex
 Smex is an M-x enhancement for Emacs. Built on top of Ido, it provides a convenient interface to your recently and most frequently used commands. And to all the other commands, too.
 - /Reference - https://github.com/nonsequitur/smex/
+
 #+begin_src elisp
 (use-package smex
   :ensure t
@@ -223,6 +321,7 @@ Smex is an M-x enhancement for Emacs. Built on top of Ido, it provides a conveni
   :bind
   ("M-x" . smex))
 #+end_src
+
 ** Emacs Config
 *** Custom Variables File
 #+begin_src elisp
@@ -230,6 +329,14 @@ Smex is an M-x enhancement for Emacs. Built on top of Ido, it provides a conveni
 #+end_src
 
 * IDE Features
+** Show keybinding on the fly
+#+BEGIN_SRC emacs-lisp
+  (use-package which-key
+    :ensure t
+    :init
+    (which-key-mode))
+#+END_SRC
+
 ** Centaur Tabs
 Centaur Tabs is an Emacs package that enhances the tab bar functionality, providing a more visually appealing and user-friendly way to manage multiple open buffers (files) within the editor. It may offer features such as clickable tabs, grouping tabs based on projects or file types, tab previews, and convenient tab navigation options. For more detailed information about Centaur Tabs and its specific functionalities, it is recommended to refer to its documentation or source code repository.
 - /Reference - https://github.com/ema2159/centaur-tabs/
@@ -246,6 +353,25 @@ Centaur Tabs is an Emacs package that enhances the tab bar functionality, provid
     ;; Enable centaur-tabs
     (centaur-tabs-mode t))
 #+end_src
+
+* My ExtraMarital Vim Affair
+#+BEGIN_SRC emacs-lisp
+  (setq evil-want-C-u-scroll t)
+  (use-package evil
+    :ensure t)
+  (use-package key-chord
+    :ensure t
+    :config
+    (setq key-chord-two-keys-delay 0.5)
+    (key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
+    (key-chord-define evil-insert-state-map "kj" 'evil-normal-state)
+    :init
+    (key-chord-mode 1))
+
+  (evil-mode)
+  (evil-set-undo-system 'undo-redo)
+  (setq evil-esc-delay 0)
+#+END_SRC  
 
 ** Treemacs
 "Treemacs" is an Emacs package that brings a tree-style file explorer directly into your Emacs workspace. With its intuitive and organized display, Treemacs allows you to navigate and manage files and directories effortlessly. It provides a visual representation of your project's structure, making it easy to switch between different files, directories, and buffers. Treemacs supports various project management features and integrates seamlessly with popular version control systems like Git. This powerful package enhances your Emacs workflow, making file management and project navigation a breeze.
@@ -301,6 +427,12 @@ Company mode in Emacs is a versatile and intelligent completion framework that e
     :config
     (add-hook 'after-init-hook 'global-company-mode))
 #+end_src
+
+- Use TAB to cycle through and insert completions at the same time
+#+BEGIN_SRC elisp
+  (company-tng-mode)
+#+END_SRC
+
 
 ** Projectile
 Projectile is a powerful project interaction library for Emacs that enhances project management and navigation. It provides a unified interface to work with multiple projects, enabling developers to switch between projects effortlessly, find files quickly, and execute project-specific commands with ease. Projectile indexes project files for speedy searches and supports various version control systems. With its intuitive keybindings and customizable behavior, Projectile simplifies project-related tasks and significantly improves productivity, making Emacs a more efficient and developer-friendly text editor for managing and working with projects of all sizes.
@@ -515,6 +647,18 @@ I ❤ Magit.
     :defer t)
 #+end_src
 
+** Terminal
+- vterm is an advanced terminal for emacs.
+#+BEGIN_SRC elisp
+  (use-package vterm
+    :ensure t)
+#+END_SRC
+
+- Limit scrollback to 10000 lines.
+#+BEGIN_SRC elisp
+  (setq shell-file-name "/bin/zsh"
+    vterm-max-scrollback 5000)
+#+END_SRC
 * Org Mode
 Org Mode in Emacs is a powerful and versatile outlining and organizing tool that extends the text editor's capabilities beyond simple plain text. It provides a structured and hierarchical format for creating notes, to-do lists, project plans, and more. Org Mode offers features such as headings, lists, tables, tags, and timestamps, enabling users to manage complex information with ease. It supports exporting to various formats like HTML, PDF, and LaTeX, making it suitable for both personal organization and professional document preparation. With its extensive functionality and seamless integration with Emacs, Org Mode empowers users to efficiently manage tasks, maintain documentation, and stay organized in a clutter-free and efficient environment.
 
@@ -526,10 +670,100 @@ Org Bullet is an Emacs package that enhances the visual appearance of Org Mode o
 #+begin_src elisp
   (use-package org-bullets
     :ensure t
-    :defer t
     :config
     (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 #+end_src
+
+** Pretty symbols
+#+BEGIN_SRC emacs-lisp
+      ;; checkboxes
+      (use-package org-superstar
+        :ensure t)
+
+      (defun org-custom-symbols ()
+        ;; Keep headings nice indented
+        (org-indent-mode)
+
+        (push '("[ ]" .  "☐") prettify-symbols-alist)
+        (push '("[X]" . "☑" ) prettify-symbols-alist)
+        ;; (push '("[X]" . "☒" ) prettify-symbols-alist)
+        (push '("[-]" . "❍" ) prettify-symbols-alist)
+
+        ;; org-babel
+        (push '("#+BEGIN_SRC" . ?≫) prettify-symbols-alist)
+        (push '("#+END_SRC" . ?≫) prettify-symbols-alist)
+        (push '("#+begin_src" . ?≫) prettify-symbols-alist)
+        (push '("#+end_src" . ?≫) prettify-symbols-alist)
+
+        (push '("#+BEGIN_QUOTE" . ?❝) prettify-symbols-alist)
+        (push '("#+END_QUOTE" . ?❞) prettify-symbols-alist)
+
+        ;; (push '("#+BEGIN_SRC python" . ) prettify-symbols-alist) ;; This is the Python symbol. Comes up weird for some reason
+        (push '("#+RESULTS:" . ?≚ ) prettify-symbols-alist)
+
+        ;; drawers
+        (push '(":PROPERTIES:" . ?) prettify-symbols-alist)
+
+        ;; tags
+        ;; (push '(":Misc:" . "" ) prettify-symbols-alist)
+
+        (prettify-symbols-mode))
+
+    (defun org-custom-headers ()
+      "Enable Doom One colors for Org headers."
+      (interactive)
+      (dolist
+          (face
+           '((org-level-1 1.5 "#51afef" ultra-bold)
+             (org-level-2 1.4 "#c678dd" extra-bold)
+             (org-level-3 1.3 "#98be65" bold)
+             (org-level-4 1.2 "#da8548" semi-bold)
+             (org-level-5 1.1 "#5699af" normal)
+             (org-level-6 1.0 "#a9a1e1" normal)))
+        (set-face-attribute (nth 0 face) nil :font "JetBrains Mono" :weight (nth 3 face) :height (nth 1 face) :foreground (nth 2 face)))
+        (set-face-attribute 'org-table nil :font "JetBrains Mono" :weight 'normal :height 1.0 :foreground "#bfafdf"))
+
+      ;; Add the above functions as an orgmode hook
+      (add-hook 'org-mode-hook 'org-custom-symbols)
+      (add-hook 'org-mode-hook 'org-custom-headers)
+#+END_SRC
+
+** Set variables
+#+BEGIN_SRC emacs-lisp
+  (setq org-directory "~/Documents/org/"
+        ; org-agenda-files '("~/Documens/org/agenda.org")
+        org-default-notes-file (expand-file-name "notes.org" org-directory)
+        org-ellipsis "⬎" ;; …⤵ ▼ ⬎
+        org-superstar-headline-bullets-list '("◉" "○" "●" "◆" "◉" "○" "●" "◆")
+        org-superstar-itembullet-alist '((?+ . ?➤) (?- . ?✦)) ; changes +/- symbols in item lists
+        org-log-done 'time
+        org-hide-emphasis-markers t
+        org-fontify-whole-heading-line t
+
+        ;; Automatically change bullet type when indenting
+        ;; Ex: indenting a + makes the bullet a *.
+        org-list-demote-modify-bullet '(("+" . "*") ("*" . "-") ("-" . "+"))
+
+        ;; ex. of org-link-abbrev-alist in action
+        ;; [[arch-wiki:Name_of_Page][Description]]
+        org-link-abbrev-alist    ; This overwrites the default Doom org-link-abbrev-list
+          '(("google" . "http://www.google.com/search?q=")
+            ("arch-wiki" . "https://wiki.archlinux.org/index.php/")
+            ("ddg" . "https://duckduckgo.com/?q=")
+            ("wiki" . "https://en.wikipedia.org/wiki/"))
+        org-table-convert-region-max-lines 20000
+        org-todo-keywords        ; This overwrites the default Doom org-todo-keywords
+          '((sequence
+             "TODO(t)"           ; A task that is ready to be tackled
+             "BLOG(b)"           ; Blog writing assignments
+             "GYM(g)"            ; Things to accomplish at the gym
+             "PROJ(p)"           ; A project that contains other tasks
+             "VIDEO(v)"          ; Video assignments
+             "WAIT(w)"           ; Something is holding up this task
+             "|"                 ; The pipe necessary to separate "active" states and "inactive" states
+             "DONE(d)"           ; Task has been completed
+             "CANCELLED(c)" )))  ; Task has been cancelled
+#+END_SRC
 
 ** Org Agenda
 Org Agenda in Emacs is a powerful and flexible tool for managing tasks, appointments, and notes. It provides a dynamic view of scheduled events, deadlines, and TODO items from various Org Mode files, enabling users to organize and prioritize their work effectively. With its customizable views, filters, and sorting options, Org Agenda offers a comprehensive overview of upcoming events and pending tasks, making it an essential feature for staying organized and productive in Emacs.
